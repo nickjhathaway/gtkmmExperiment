@@ -3,7 +3,6 @@
 #include <random>
 #include <gdkmm/rgba.h>
 #include <libgdamm.h>
-#include <libgnomedbmm.h>
 
 HelloWorld::HelloWorld()
 : m_button("Hello World")   // creates a new button with label "Hello World".

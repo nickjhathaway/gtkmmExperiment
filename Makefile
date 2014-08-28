@@ -26,7 +26,7 @@ OBJNOMAIN = $(filter-out $(addsuffix /src/main.o, $(OBJ_DIR)), $(OBJ))
 BIN = $(addsuffix $(CXXOUTNAME), bin/)
 DYLIB = $(addprefix $(addsuffix $(CXXOUTNAME), $(LIB_DIR)/lib), .dylib)
 SOLIB = $(addprefix $(addsuffix $(CXXOUTNAME), $(LIB_DIR)/lib), .so)
-COMMON = $(CXXFLAGS) $(CXXOPT) $(COMLIBS) `pkg-config gtkmm-3.0 --cflags` `pkg-config libgdamm-5.0 --cflags`
+COMMON = $(CXXFLAGS) $(CXXOPT) $(COMLIBS) 
 
 
 
@@ -48,7 +48,7 @@ $(OBJ_DIR)/%.o: %.cpp
 	$(CXX) -DNOT_HEADER_ONLY $(COMMON)  -fpic -c $< -o $@
 
 $(BIN): $(OBJ) $(OBJ_DIR)/src/main.o
-	$(CXX) $(COMMON) -o $@ $^ $(LD_FLAGS) `pkg-config gtkmm-3.0 --libs`
+	$(CXX) $(COMMON) -o $@ $^ $(LD_FLAGS) 
 
 
 

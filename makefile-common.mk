@@ -85,6 +85,19 @@ ifeq ($(USE_MLPACK),1)
 	endif
 endif
 
+#libfdamm
+ifeq ($(USE_LIBGDAMM),1)
+    COMLIBS += `pkg-config $(LOCAL_PATH)/libgdamm/lib/pkgconfig/libgdamm-5.0.pc --cflags`
+	LD_FLAGS += `pkg-config $(LOCAL_PATH)/libgdamm/lib/pkgconfig/libgdamm-5.0.pc --libs`
+endif
+
+#gtkmm library, should have 3.0 install and .pc file should be in PKG_CONFIG_PATH  
+ifeq ($(USE_GTKMM),1)
+	LD_FLAGS += `pkg-config gtkmm-3.0 --libs`
+	COMLIBS += `pkg-config gtkmm-3.0 --cflags`
+endif
+
+
 #qt5
 ifeq ($(USE_QT5),1)
 	ifeq ($(UNAME_S),Darwin)

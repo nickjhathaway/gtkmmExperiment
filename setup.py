@@ -36,6 +36,7 @@ class Paths():
         self.paths["armadillo"] = self.__armadillo()
         self.paths["mlpack"] = self.__mlpack()
         self.paths["liblinear"] = self.__liblinear()
+        self.paths["libgdamm"] = self.__libgdamm()
 
     def path(self, name):
         if name in self.paths:
@@ -75,6 +76,10 @@ class Paths():
         #url = "ftp://ftp.stat.math.ethz.ch/Software/R/R-devel.tar.gz"
         url = "http://cran.r-project.org/src/base/R-3/R-3.1.0.tar.gz"
         return self.__package_dirs(url, "R-devel")
+    
+    def __libgdamm(self):
+        url = "http://gensho.acc.umu.se/pub/GNOME/sources/libgdamm/4.99/libgdamm-4.99.0.1.tar.gz"
+        return self.__package_dirs(url, "libgdamm")
 
     def __boost(self):
         url = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.gz"
@@ -119,7 +124,7 @@ class Setup:
         self.CC = ""
         self.CXX = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "libgdamm"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -135,7 +140,8 @@ class Setup:
                        "armadillo": self.armadillo,
                        "mlpack": self.mlpack,
                        "liblinear": self.liblinear,
-                       "pear": self.pear
+                       "pear": self.pear,
+                       "libgdamm": self.libgdamm
                        }
     def __processArgs(self):
         dirs = self.args.dirsToDelete
@@ -161,7 +167,7 @@ class Setup:
         for line in compfile:
             values = line.split("=")
             firstArg = values[0].strip()
-            if (firstArg.find("USE_") != -1):
+            if (firstArg.find("USE_") != -1 and firstArg.find("#") == -1):
                self.setUpNeeded.append(firstArg)
 
     def parserForCompilers(self, compfile):
@@ -292,7 +298,12 @@ class Setup:
         cmd = " ".join(cmd.split())
 
         self.__build(i, cmd)
-
+        
+    def libgdamm(self):
+        i = self.__path("libgdamm")
+        cmd = """./configure --prefix={local_dir} && make -j {num_cores} && make install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+        self.__build(i, cmd)
+        
     def bamtools(self):
         i = self.__path('bamtools')
         cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
@@ -395,6 +406,8 @@ def generateCompfile(outFileName):
         f.write("#USE_liblinear = 1\n")
         f.write("#USE_PEAR = 1\n")
         f.write("#USE_CURL = 1\n")
+        f.write("#USE_LIBGDAMM = 1\n")
+        f.write("#USE_GTKMM = 1\n")
 
 def startSrc():
     if not os.path.isdir("src/"):

@@ -1,5 +1,5 @@
-CC = gcc-4.8
-CXX = g++-4.8
+CC = /usr/bin/clang
+CXX = /usr/bin/clang++
 CXXOUTNAME = gtkmmExperiment
 CXXFLAGS = -std=c++11 -Wall
 CXXOPT += -O2 -funroll-loops -DNDEBUG  
@@ -24,3 +24,5 @@ INSTALL_DIR=INSTALL_LOCATION
 #USE_liblinear = 1
 #USE_PEAR = 1
 #USE_CURL = 1
+#USE_LIBGDAMM = 1
+USE_GTKMM = 1

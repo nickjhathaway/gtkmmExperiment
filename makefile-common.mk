@@ -39,6 +39,14 @@ ifeq ($(USE_ARMADILLO),1)
 			-larmadillo
 endif
 
+#bibcpp
+ifeq ($(USE_BIBCPP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
+			-L$(LOCAL_PATH)/bibcpp/lib  \
+			-lseqTools
+endif
+
 #shark
 ifeq ($(USE_SHARK),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/shark/include
@@ -76,6 +84,12 @@ ifeq ($(USE_CURL),1)
 	LD_FLAGS += -lcurl
 endif
 
+#gtkmm library, should have 3.0 install and .pc file should be in PKG_CONFIG_PATH  
+ifeq ($(USE_GTKMM),1)
+	LD_FLAGS += `pkg-config gtkmm-3.0 --libs`
+	COMLIBS += `pkg-config gtkmm-3.0 --cflags`
+endif
+
 #ml_pack
 ifeq ($(USE_MLPACK),1)
 	ifeq ($(UNAME_S),Darwin)
@@ -84,19 +98,6 @@ ifeq ($(USE_MLPACK),1)
    		LD_FLAGS += -llapack -lf77blas -lcblas -latlas # non-threaded
 	endif
 endif
-
-#libfdamm
-ifeq ($(USE_LIBGDAMM),1)
-    COMLIBS += `pkg-config $(LOCAL_PATH)/libgdamm/lib/pkgconfig/libgdamm-5.0.pc --cflags`
-	LD_FLAGS += `pkg-config $(LOCAL_PATH)/libgdamm/lib/pkgconfig/libgdamm-5.0.pc --libs`
-endif
-
-#gtkmm library, should have 3.0 install and .pc file should be in PKG_CONFIG_PATH  
-ifeq ($(USE_GTKMM),1)
-	LD_FLAGS += `pkg-config gtkmm-3.0 --libs`
-	COMLIBS += `pkg-config gtkmm-3.0 --cflags`
-endif
-
 
 #qt5
 ifeq ($(USE_QT5),1)

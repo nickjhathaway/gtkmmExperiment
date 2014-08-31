@@ -3,17 +3,24 @@
 "purcaro@gmail.com"
 
 import urllib, os, shutil, tarfile, multiprocessing, subprocess, sys
+from color_text import ColorText as CT 
+
 
 class Utils:
     @staticmethod
     def run_in_dir(cmd, d):
+        print CT.boldBlack("here")
         cmd = "cd " + Utils.shellquote(d) + " && " + cmd + " && cd -"
+        print CT.boldBlack("newcmd")
+        print CT.boldGreen(cmd)
         Utils.run(cmd)
 
     @staticmethod
     def run(cmd):
+        #print CT.boldRed("before process")
         # from http://stackoverflow.com/a/4418193
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        #print CT.boldRed("after process")
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
@@ -24,10 +31,11 @@ class Utils:
 
         output = process.communicate()[0]
         exitCode = process.returncode
-
-        if (exitCode == 0):
-            return output
-        raise Exception(cmd, exitCode, output)
+        #print "exit code "  + CT.boldRed(str(exitCode))
+        return output
+        #if (exitCode == 0):
+            
+        #raise Exception(cmd, exitCode, output)
 
     @staticmethod
     def shellquote(s):

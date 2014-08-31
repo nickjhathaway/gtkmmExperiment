@@ -5,6 +5,7 @@
 import subprocess, sys, os, argparse
 from scripts.utils import Utils
 from collections import namedtuple
+from scripts.color_text import ColorText as CT
 
 BuildPaths = namedtuple("BuildPaths", 'url build_dir build_sub_dir local_dir')
 
@@ -16,8 +17,8 @@ def isMac():
     return sys.platform == "darwin"
 
 class Paths():
-    def __init__(self):
-        self.base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "external"))
+    def __init__(self, externalLoc):
+        self.base_dir = externalLoc;
         self.ext_tars = os.path.join(self.base_dir, "tarballs")
         self.ext_build = os.path.join(self.base_dir, "build")
         self.install_dir = os.path.join(self.base_dir, "local")
@@ -36,7 +37,7 @@ class Paths():
         self.paths["armadillo"] = self.__armadillo()
         self.paths["mlpack"] = self.__mlpack()
         self.paths["liblinear"] = self.__liblinear()
-        self.paths["libgdamm"] = self.__libgdamm()
+        self.paths["bibcpp"] = self.__bibcpp()
 
     def path(self, name):
         if name in self.paths:
@@ -74,12 +75,8 @@ class Paths():
 
     def __Rdevel(self):
         #url = "ftp://ftp.stat.math.ethz.ch/Software/R/R-devel.tar.gz"
-        url = "http://cran.r-project.org/src/base/R-3/R-3.1.0.tar.gz"
+        url = "http://cran.r-project.org/src/base/R-3/R-3.1.1.tar.gz"
         return self.__package_dirs(url, "R-devel")
-    
-    def __libgdamm(self):
-        url = "http://gensho.acc.umu.se/pub/GNOME/sources/libgdamm/4.99/libgdamm-4.99.0.1.tar.gz"
-        return self.__package_dirs(url, "libgdamm")
 
     def __boost(self):
         url = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.gz"
@@ -104,18 +101,33 @@ class Paths():
     def __mathgl(self):
         url = "http://freefr.dl.sourceforge.net/project/mathgl/mathgl/mathgl%202.2.1/mathgl-2.2.1.tar.gz"
         return self.__package_dirs(url, "mathgl")
+    
+    def __bibcpp(self):
+        url = "https://github.com/bailey-lab/bibcpp.git"
+        name = "bibcpp"
+        build_dir = os.path.join(self.ext_build, name)
+        fn = os.path.basename(url)
+        fn_noex = fn.replace(".git", "")
+        build_sub_dir = os.path.join(build_dir, fn_noex)
+        local_dir = os.path.join(self.install_dir, name)
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __package_dirs(self, url, name):
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
-        fn_noex = fn.replace(".tar.gz", "").replace(".tar.bz2", "")
+        fn_noex = fn.replace(".tar.gz", "").replace(".tar.bz2", "").replace(".git", "")
         build_sub_dir = os.path.join(build_dir, fn_noex)
         local_dir = os.path.join(self.install_dir, name)
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
 class Setup:
     def __init__(self, args):
-        self.paths = Paths()
+        self.extDirLoc = ""
+        if not args.compfile:
+            self.extDirLoc = os.path.abspath(os.path.join(os.path.dirname(__file__), "external"))
+        else:
+            self.extDirLoc = os.path.abspath(self.parseForExtPath(args.compfile[0]))
+        self.paths = Paths(self.extDirLoc)
         self.args = args
         self.setUps = {}
         self.setUpNeeded = []
@@ -123,8 +135,9 @@ class Setup:
         self.failedInstall = []
         self.CC = ""
         self.CXX = ""
+        self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "libgdamm"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibcpp"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -141,7 +154,8 @@ class Setup:
                        "mlpack": self.mlpack,
                        "liblinear": self.liblinear,
                        "pear": self.pear,
-                       "libgdamm": self.libgdamm
+                       "bibcpp": self.bibcpp
+                       
                        }
     def __processArgs(self):
         dirs = self.args.dirsToDelete
@@ -161,13 +175,27 @@ class Setup:
         if self.args.compfile:
             self.parseSetUpNeeded(self.args.compfile[0])
             self.parserForCompilers(self.args.compfile[0])
-
+    
+    def parseForExtPath(self, compfile):
+        compfile = open(compfile)
+        for line in compfile:
+            values = line.split("=")
+            firstArg = values[0].strip()
+            if (firstArg == "EXT_PATH"):
+               pathPreProcess = values[1].strip()
+               pathPreProcess = pathPreProcess.replace("$(realpath", "")
+               pathPreProcess = pathPreProcess.replace(")", "")
+               pathPreProcess = pathPreProcess.strip()
+        return pathPreProcess
+            
+               
+    
     def parseSetUpNeeded(self, compfile):
         compfile = open(compfile)
         for line in compfile:
             values = line.split("=")
             firstArg = values[0].strip()
-            if (firstArg.find("USE_") != -1 and firstArg.find("#") == -1):
+            if (firstArg.find("USE_") != -1 and line.find("1") != -1):
                self.setUpNeeded.append(firstArg)
 
     def parserForCompilers(self, compfile):
@@ -218,8 +246,8 @@ class Setup:
             if not self.args.CXX:
                 print "Need to supply C++ compiler by giving -CXX"
                 exit(1)
-            self.CC = self.args.CC
-            self.CXX = self.args.CXX
+            self.CC = self.args.CC[0]
+            self.CXX = self.args.CXX[0]
 
         for lib in libsToInstall:
             if not lib in self.setUps.keys():
@@ -257,17 +285,17 @@ class Setup:
     def boost(self):
         i = self.__path("boost")
         if self.args.clang:
-            cmd = """
-                wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&"""
+             if isMac():
+                cmd = """
+                wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir}&&  ./b2  -d 2 toolset=clang cxxflags=\"-stdlib=libc++\" linkflags=\"-stdlib=libc++\"  -j {num_cores} install &&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
+             else:
+                cmd = """wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir}&&  ./b2  -d 2 toolset=clang -j {num_cores} install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
         else:
             if isMac():
-                cmd = """echo "using gcc : 4.8 : g++-4.8 ; " >> tools/build/v2/user-config.jam &&./bootstrap.sh --prefix={local_dir} && ./b2 -d 2 toolset=darwin-4.8 -j {num_cores} install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
+                cmd = """echo "using gcc : 4.8 : g++-4.8 ; " >> tools/build/v2/user-config.jam &&./bootstrap.sh --prefix={local_dir} && ./b2 -d 2 toolset=darwin-4.8 -j {num_cores} install && install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
             else:
                 cmd = """echo "using gcc : 4.8 : g++-4.8 ; " >> tools/build/v2/user-config.jam &&./bootstrap.sh --prefix={local_dir} && ./b2 -d 2 toolset=gcc-4.8 -j {num_cores} install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
-
-        if isMac():
-            cmd += """ &&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
-
+        print cmd
         self.__build(i, cmd)
 
     def pear(self):
@@ -279,31 +307,47 @@ class Setup:
     def Rdevel(self):
         i = self.__path("R-devel")
         if isMac():
-
             cmd = """
                 ./configure --prefix={local_dir} --enable-R-shlib --with-x=no CC={CC} CXX={CXX} OBJC={CC}
                 && make -j {num_cores}
                 && make install
-                && echo 'install.packages(c(\"gridExtra\", \"ape\", \"ggplot2\", \"seqinr\",\"Rcpp\", \"RInside\"), repos=\"http://cran.us.r-project.org\")' | $({local_dir}/R.framework/Resources/bin/R RHOME)/bin/R --slave --vanilla
-                && echo 'install.packages(\"{local_dir}/../../../rPackage/sequenceToolsR/sequenceToolsR_1.0.tar.gz\", repos = NULL, type="source")' | $({local_dir}/R.framework/Resources/bin/R RHOME)/bin/R --slave --vanilla
+                && echo 'install.packages(c(\"gridExtra\", \"ape\", \"ggplot2\", \"seqinr\",\"Rcpp\", \"RInside\", \"devtools\"), repos=\"http://cran.us.r-project.org\")' | $({local_dir}/R.framework/Resources/bin/R RHOME)/bin/R --slave --vanilla
                 """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         else:
             cmd = """
                 ./configure --prefix={local_dir} --enable-R-shlib --with-x=no CC={CC} CXX={CXX} OBJC={CC}
                 && make -j {num_cores}
                 && make install
-                && echo 'install.packages(c(\"gridExtra\", \"ape\", \"ggplot2\", \"seqinr\",\"Rcpp\", \"RInside\"), repos=\"http://cran.us.r-project.org\")' | $({local_dir}/lib/R/bin/R RHOME)/bin/R --slave --vanilla
-            && echo 'install.packages(\"{local_dir}/../../../rPackage/sequenceToolsR/sequenceToolsR_1.0.tar.gz\", repos = NULL, type="source")' | $({local_dir}/lib/R/bin/R RHOME)/bin/R --slave --vanilla
+                && echo 'install.packages(c(\"gridExtra\", \"ape\", \"ggplot2\", \"seqinr\",\"Rcpp\", \"RInside\",\"devtools\"), repos=\"http://cran.us.r-project.org\")' | $({local_dir}/lib/R/bin/R RHOME)/bin/R --slave --vanilla
             """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         cmd = " ".join(cmd.split())
 
         self.__build(i, cmd)
-        
-    def libgdamm(self):
-        i = self.__path("libgdamm")
-        cmd = """./configure --prefix={local_dir} && make -j {num_cores} && make install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
-        self.__build(i, cmd)
-        
+    
+    def installRPackageSource(self, sourceFile):
+        i = self.__path("R-devel")
+        for pack in sourceFile.split(","):
+            if isMac():
+                cmd = """echo 'install.packages(\"{SOURCEFILE}\", repos = NULL, type="source")' | $({local_dir}/R.framework/Resources/bin/R RHOME)/bin/R --slave --vanilla
+                """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '),SOURCEFILE = pack )
+            else:
+                cmd = """echo 'install.packages(\"{SOURCEFILE}\", repos = NULL, type="source")' | $({local_dir}/lib/R/bin/R RHOME)/bin/R --slave --vanilla
+                """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '),SOURCEFILE = pack )
+            print CT.boldBlack(cmd)
+            Utils.run(cmd)
+    
+    def installRPackageName(self, packageName):
+        i = self.__path("R-devel")
+        for pack in packageName.split(","):
+            if isMac():
+                cmd = """echo 'install.packages(c(\"{PACKAGENAME}\"), repos=\"http://cran.us.r-project.org\")' | $({local_dir}/R.framework/Resources/bin/R RHOME)/bin/R --slave --vanilla
+                """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), PACKAGENAME = pack )
+            else:
+                cmd = """echo 'install.packages(\"{PACKAGENAME}\", repos=\"http://cran.us.r-project.org\")'  | $({local_dir}/lib/R/bin/R RHOME)/bin/R --slave --vanilla
+                """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '),PACKAGENAME = pack )
+            print CT.boldBlack(cmd)
+            Utils.run(cmd)
+    
     def bamtools(self):
         i = self.__path('bamtools')
         cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
@@ -312,6 +356,27 @@ class Setup:
         cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(
             local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         Utils.run_in_dir(cmd, i.build_dir)
+    
+    
+    def bibcpp(self):
+        i = self.__path('bibcpp')
+        cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
+        Utils.run(cmd)
+        secondCmd = """./setup.py -generateFull compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibcpp -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        #print secondCmd
+        Utils.run_in_dir(secondCmd, i.build_dir)
+        secondCmd = """./setup.py -compfile compfile.mk""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        #print secondCmd
+        Utils.run_in_dir(secondCmd, i.build_dir)
+        secondCmd = """make COMPFILE=compfile.mk -j {num_cores}""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        #print secondCmd
+        Utils.run_in_dir(secondCmd, i.build_dir)
+        secondCmd = """make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        #print secondCmd
+        Utils.run_in_dir(secondCmd, i.build_dir)
+        i = self.__path('bibcpp')
+        
+        Utils.run_in_dir(secondCmd, i.build_dir)
 
     def cppcms(self):
         i = self.__path('cppcms')
@@ -378,7 +443,7 @@ mkdir -p build
         pkgs = """libbz2-dev python2.7-dev cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev
 python doxygen doxygen-gui auctex xindy graphviz libcurl4-openssl-dev""".split()
 
-def generateCompfile(outFileName):
+def generateCompfileEmpty(outFileName):
     with open(outFileName, "w") as f:
         f.write("CC = gcc-4.8\n")
         f.write("CXX = g++-4.8\n")
@@ -392,22 +457,51 @@ def generateCompfile(outFileName):
         f.write("#debug\n")
         f.write("CXXDEBUG = -g -gstabs+ \n")
         f.write("INSTALL_DIR=INSTALL_LOCATION\n")
+        f.write("EXT_PATH=$(realpath external)\n")
         f.write("\n")
-        f.write("#USE_CPPITERTOOLS = 1\n")
-        f.write("#USE_CPPPROGUTILS = 1\n")
-        f.write("#USE_ZI_LIB = 1\n")
-        f.write("#USE_BOOST = 1\n")
-        f.write("#USE_R = 1\n")
-        f.write("#USE_BAMTOOLS = 1\n")
-        f.write("#USE_CPPCMS = 1\n")
-        f.write("#USE_MATHGL = 1\n")
-        f.write("#USE_ARMADILLO = 1\n")
-        f.write("#USE_MLPACK = 1\n")
-        f.write("#USE_liblinear = 1\n")
-        f.write("#USE_PEAR = 1\n")
-        f.write("#USE_CURL = 1\n")
-        f.write("#USE_LIBGDAMM = 1\n")
-        f.write("#USE_GTKMM = 1\n")
+        
+        f.write("USE_CPPITERTOOLS = 0\n")
+        f.write("USE_CPPPROGUTILS = 0\n")
+        f.write("USE_ZI_LIB = 0\n")
+        f.write("USE_BOOST = 0\n")
+        f.write("USE_R = 0\n")
+        f.write("USE_BAMTOOLS = 0\n")
+        f.write("USE_CPPCMS = 0\n")
+        f.write("USE_MATHGL = 0\n")
+        f.write("USE_ARMADILLO = 0\n")
+        f.write("USE_MLPACK = 0\n")
+        f.write("USE_liblinear = 0\n")
+        f.write("USE_PEAR = 0\n")
+        f.write("USE_CURL = 0\n")
+        f.write("USE_GTKMM = 0\n")
+        f.write("USE_BIBCPP = 0\n")
+
+def generateCompfileFull(outFileName, externalDirLoc, cc, cxx, outName, installDirName, installDirLoc, neededLibs):
+    availableLibs = ["CPPITERTOOLS","CPPPROGUTILS","ZI_LIB","BOOST","R","BAMTOOLS","CPPCMS","MATHGL","ARMADILLO","MLPACK","LIBLINEAR","PEAR","CURL","GTKMM", "BIBCPP"]
+    neededLibs = map(lambda x:x.upper(), neededLibs)
+    """@todo: Make some of these default to an envirnment CC and CXX and maybe even CXXFLAGS as well 
+        @todo: Make availableLibs a more universal constant"""
+    with open(outFileName, "w") as f:
+        f.write("CC = {CC}\n".format(CC = cc))
+        f.write("CXX = {CXX}\n".format(CXX = cxx))
+        f.write("CXXOUTNAME = {NAME_OF_PROGRAM}\n".format(NAME_OF_PROGRAM = outName))
+        f.write("CXXFLAGS = -std=c++11 -Wall\n")
+        f.write("CXXOPT += -O2 -funroll-loops -DNDEBUG  \n")
+        f.write("ifneq ($(shell uname -s),Darwin)\n")
+        f.write("\tCXXOPT += -march=native -mtune=native\n" )
+        f.write("endif\n")
+        f.write("\n")
+        f.write("#debug\n")
+        f.write("CXXDEBUG = -g -gstabs+ \n")
+        f.write("INSTALL_DIR={INSTALL_LOCATION}\n".format(INSTALL_LOCATION = os.path.join(installDirLoc,installDirName)))
+        f.write("EXT_PATH=$(realpath {EXTERNAL})\n".format(EXTERNAL = externalDirLoc))
+        f.write("SCRIPTS_DIR=$(realpath scripts)\n")
+        f.write("\n")
+        for lib in availableLibs:
+            if lib in neededLibs:
+                f.write("USE_{LIB} = 1\n".format(LIB = lib))
+            else:
+                f.write("USE_{LIB} = 0\n".format(LIB = lib))
 
 def startSrc():
     if not os.path.isdir("src/"):
@@ -418,6 +512,8 @@ def startSrc():
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-instRPackageName',type=str, nargs=1)
+    parser.add_argument('-instRPackageSource',type=str, nargs=1)
     parser.add_argument('-compfile', type=str, nargs=1)
     parser.add_argument('dirsToDelete', type=str, nargs='*')
     parser.add_argument('-CC', type=str, nargs=1)
@@ -427,17 +523,35 @@ def parse_args():
     parser.add_argument('-addBashCompletion', dest = 'addBashCompletion', action = 'store_true' )
     parser.add_argument('-clang', dest = 'clang', action = 'store_true' )
     parser.add_argument('-generate', type=str, nargs=1)
+    parser.add_argument('-generateFull', type=str, nargs=1)
     parser.add_argument('-generateSrc', dest = 'generateSrc', action = 'store_true' )
+    parser.add_argument('-outname', type=str, nargs=1)
+    parser.add_argument('-externalLoc', type=str, nargs=1)
+    parser.add_argument('-prefix', type=str, nargs=1)
+    parser.add_argument('-installName', type=str, nargs=1)
+    parser.add_argument('-neededLibs', type=str, nargs=1)
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
+    if(args.instRPackageName):
+        s = Setup(args)
+        s.installRPackageName(args.instRPackageName[0])
+        return (0)
+    if(args.instRPackageSource):
+        s = Setup(args)
+        s.installRPackageSource(args.instRPackageSource[0])
+        return (0)
     if(args.generate):
-        generateCompfile(args.generate[0])
-        exit(1)
+        generateCompfileEmpty(args.generate[0])
+        return (0)
+    if(args.generateFull):
+        generateCompfileFull(args.generateFull[0],args.externalLoc[0], args.CC[0], args.CXX[0],args.outname[0],args.installName[0], args.prefix[0],args.neededLibs[0].split(",") )
+        return (0)
     if(args.generateSrc):
         startSrc()
-        exit(1)
+        return (0)
 
     s = Setup(args)
     if args.print_libs:

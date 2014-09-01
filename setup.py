@@ -3,9 +3,9 @@
 # by purcaro@gmail.com
 
 import subprocess, sys, os, argparse
-from scripts.utils import Utils
+from setUpScripts.utils import Utils
 from collections import namedtuple
-from scripts.color_text import ColorText as CT
+from setUpScripts.color_text import ColorText as CT
 
 BuildPaths = namedtuple("BuildPaths", 'url build_dir build_sub_dir local_dir')
 
@@ -362,7 +362,7 @@ class Setup:
         i = self.__path('bibcpp')
         cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
         Utils.run(cmd)
-        secondCmd = """./setup.py -generateFull compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibcpp -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        secondCmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibcpp -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
         #print secondCmd
         Utils.run_in_dir(secondCmd, i.build_dir)
         secondCmd = """./setup.py -compfile compfile.mk""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
@@ -443,65 +443,7 @@ mkdir -p build
         pkgs = """libbz2-dev python2.7-dev cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev
 python doxygen doxygen-gui auctex xindy graphviz libcurl4-openssl-dev""".split()
 
-def generateCompfileEmpty(outFileName):
-    with open(outFileName, "w") as f:
-        f.write("CC = gcc-4.8\n")
-        f.write("CXX = g++-4.8\n")
-        f.write("CXXOUTNAME = NAME_OF_PROGRAM\n")
-        f.write("CXXFLAGS = -std=c++11 -Wall\n")
-        f.write("CXXOPT += -O2 -funroll-loops -DNDEBUG  \n")
-        f.write("ifneq ($(shell uname -s),Darwin)\n")
-        f.write("\tCXXOPT += -march=native -mtune=native\n" )
-        f.write("endif\n")
-        f.write("\n")
-        f.write("#debug\n")
-        f.write("CXXDEBUG = -g -gstabs+ \n")
-        f.write("INSTALL_DIR=INSTALL_LOCATION\n")
-        f.write("EXT_PATH=$(realpath external)\n")
-        f.write("\n")
-        
-        f.write("USE_CPPITERTOOLS = 0\n")
-        f.write("USE_CPPPROGUTILS = 0\n")
-        f.write("USE_ZI_LIB = 0\n")
-        f.write("USE_BOOST = 0\n")
-        f.write("USE_R = 0\n")
-        f.write("USE_BAMTOOLS = 0\n")
-        f.write("USE_CPPCMS = 0\n")
-        f.write("USE_MATHGL = 0\n")
-        f.write("USE_ARMADILLO = 0\n")
-        f.write("USE_MLPACK = 0\n")
-        f.write("USE_liblinear = 0\n")
-        f.write("USE_PEAR = 0\n")
-        f.write("USE_CURL = 0\n")
-        f.write("USE_GTKMM = 0\n")
-        f.write("USE_BIBCPP = 0\n")
 
-def generateCompfileFull(outFileName, externalDirLoc, cc, cxx, outName, installDirName, installDirLoc, neededLibs):
-    availableLibs = ["CPPITERTOOLS","CPPPROGUTILS","ZI_LIB","BOOST","R","BAMTOOLS","CPPCMS","MATHGL","ARMADILLO","MLPACK","LIBLINEAR","PEAR","CURL","GTKMM", "BIBCPP"]
-    neededLibs = map(lambda x:x.upper(), neededLibs)
-    """@todo: Make some of these default to an envirnment CC and CXX and maybe even CXXFLAGS as well 
-        @todo: Make availableLibs a more universal constant"""
-    with open(outFileName, "w") as f:
-        f.write("CC = {CC}\n".format(CC = cc))
-        f.write("CXX = {CXX}\n".format(CXX = cxx))
-        f.write("CXXOUTNAME = {NAME_OF_PROGRAM}\n".format(NAME_OF_PROGRAM = outName))
-        f.write("CXXFLAGS = -std=c++11 -Wall\n")
-        f.write("CXXOPT += -O2 -funroll-loops -DNDEBUG  \n")
-        f.write("ifneq ($(shell uname -s),Darwin)\n")
-        f.write("\tCXXOPT += -march=native -mtune=native\n" )
-        f.write("endif\n")
-        f.write("\n")
-        f.write("#debug\n")
-        f.write("CXXDEBUG = -g -gstabs+ \n")
-        f.write("INSTALL_DIR={INSTALL_LOCATION}\n".format(INSTALL_LOCATION = os.path.join(installDirLoc,installDirName)))
-        f.write("EXT_PATH=$(realpath {EXTERNAL})\n".format(EXTERNAL = externalDirLoc))
-        f.write("SCRIPTS_DIR=$(realpath scripts)\n")
-        f.write("\n")
-        for lib in availableLibs:
-            if lib in neededLibs:
-                f.write("USE_{LIB} = 1\n".format(LIB = lib))
-            else:
-                f.write("USE_{LIB} = 0\n".format(LIB = lib))
 
 def startSrc():
     if not os.path.isdir("src/"):
@@ -518,18 +460,10 @@ def parse_args():
     parser.add_argument('dirsToDelete', type=str, nargs='*')
     parser.add_argument('-CC', type=str, nargs=1)
     parser.add_argument('-CXX', type=str, nargs=1)
-    parser.add_argument('-bib-cpp', dest = 'bib_cpp', action = 'store_true' )
     parser.add_argument('-libs', dest = 'print_libs', action = 'store_true' )
     parser.add_argument('-addBashCompletion', dest = 'addBashCompletion', action = 'store_true' )
     parser.add_argument('-clang', dest = 'clang', action = 'store_true' )
-    parser.add_argument('-generate', type=str, nargs=1)
-    parser.add_argument('-generateFull', type=str, nargs=1)
     parser.add_argument('-generateSrc', dest = 'generateSrc', action = 'store_true' )
-    parser.add_argument('-outname', type=str, nargs=1)
-    parser.add_argument('-externalLoc', type=str, nargs=1)
-    parser.add_argument('-prefix', type=str, nargs=1)
-    parser.add_argument('-installName', type=str, nargs=1)
-    parser.add_argument('-neededLibs', type=str, nargs=1)
     return parser.parse_args()
 
 
@@ -542,12 +476,6 @@ def main():
     if(args.instRPackageSource):
         s = Setup(args)
         s.installRPackageSource(args.instRPackageSource[0])
-        return (0)
-    if(args.generate):
-        generateCompfileEmpty(args.generate[0])
-        return (0)
-    if(args.generateFull):
-        generateCompfileFull(args.generateFull[0],args.externalLoc[0], args.CC[0], args.CXX[0],args.outname[0],args.installName[0], args.prefix[0],args.neededLibs[0].split(",") )
         return (0)
     if(args.generateSrc):
         startSrc()

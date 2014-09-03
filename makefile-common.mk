@@ -8,11 +8,6 @@ SRC = -I./src/
 COMLIBS += $(LOCALTOOLS) $(EXTTOOLS) $(SRC)
 
 
-#CPPPROGUTILS
-ifeq ($(USE_CPPPROGUTILS),1)
-	COMLIBS += -I$(LOCAL_PATH)/cppprogutils
-endif
-
 #boost
 ifeq ($(USE_BOOST),1)
 	CXXOPT += -DBOOST_UBLAS_NDEBUG
@@ -59,6 +54,12 @@ endif
 ifeq ($(USE_CPPPROGUTILS),1)
 	COMLIBS += -I$(LOCAL_PATH)/cppprogutils
 endif
+
+#CATCH
+ifeq ($(USE_CATCH),1)
+	COMLIBS += -I$(LOCAL_PATH)/catch/single_include
+endif
+
 #ZI_LIB
 ifeq ($(USE_ZI_LIB),1)
 	COMLIBS += -I$(LOCAL_PATH)/zi_lib

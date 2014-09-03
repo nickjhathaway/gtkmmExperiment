@@ -1,4 +1,4 @@
-CC = gcc-4.8
+CC = gcc-4.9
 CXX = g++-4.8
 CXXOUTNAME = out
 CXXFLAGS = -std=c++11 -Wall
@@ -28,3 +28,4 @@ USE_PEAR = 0
 USE_CURL = 0
 USE_GTKMM = 0
 USE_BIBCPP = 0
+USE_CATCH = 0

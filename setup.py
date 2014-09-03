@@ -38,6 +38,7 @@ class Paths():
         self.paths["mlpack"] = self.__mlpack()
         self.paths["liblinear"] = self.__liblinear()
         self.paths["bibcpp"] = self.__bibcpp()
+        self.paths["catch"] = self.__catch()
 
     def path(self, name):
         if name in self.paths:
@@ -62,6 +63,11 @@ class Paths():
     def __cppitertools(self):
         url = 'https://github.com/ryanhaining/cppitertools.git'
         local_dir = os.path.join(self.install_dir, "cppitertools")
+        return BuildPaths(url, '', '', local_dir)
+    
+    def __catch(self):
+        url = 'https://github.com/philsquared/Catch.git'
+        local_dir = os.path.join(self.install_dir, "catch")
         return BuildPaths(url, '', '', local_dir)
 
     def __cppprogutils(self):
@@ -136,7 +142,7 @@ class Setup:
         self.CC = ""
         self.CXX = ""
         self.externalLoc = ""
-        self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear"]
+        self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
         self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibcpp"]
         self.__initSetUps()
         self.__processArgs()
@@ -145,6 +151,7 @@ class Setup:
         self.setUps = {"zi_lib": self.zi_lib,
                        "boost": self.boost,
                        "cppitertools": self.cppitertools,
+                       "catch": self.catch,
                        "cppprogutils": self.cppprogutils,
                        "R-devel": self.Rdevel,
                        "bamtools": self.bamtools,
@@ -380,7 +387,10 @@ class Setup:
 
     def cppcms(self):
         i = self.__path('cppcms')
-        cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+        if self.args.clang:
+            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+        else:
+            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} CPPFLAGS=-stdlib=libstdc++ cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && CPPFLAGS=-stdlib=libstdc++ make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         if(sys.platform == "darwin"):
             cmd += " && install_name_tool -change libbooster.0.dylib {local_dir}/lib/libbooster.0.dylib {local_dir}/lib/libcppcms.1.dylib".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores())
         self.__build(i, cmd)
@@ -438,6 +448,9 @@ mkdir -p build
 
     def cppprogutils(self):
         self.__git(self.__path('cppprogutils'))
+        
+    def catch(self):
+        self.__git(self.__path('catch'))
 
     def ubuntu(self):
         pkgs = """libbz2-dev python2.7-dev cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev

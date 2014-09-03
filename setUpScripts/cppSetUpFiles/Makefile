@@ -1,7 +1,12 @@
 ROOT = $(realpath ./)
 LIB_DIR=$(ROOT)/lib
 
+ifneq (,$(wildcard compfile.mk))
+COMPFILE=compfile.mk
+endif
+
 include $(COMPFILE)
+
 include $(ROOT)/makefile-common.mk
 
 
@@ -49,7 +54,7 @@ $(OBJ_DIR)/%.o: %.cpp
 	$(CXX) -DNOT_HEADER_ONLY $(COMMON) -fpic -c $< -o $@
 
 $(BIN): $(OBJ) 
-	$(CXX) $(COMMON) -o $@ $^ $(LD_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -o $@ $^ $(LD_FLAGS) 
 	
 	
 ############ remove the objects that were dependant the changed headers 
@@ -69,14 +74,14 @@ sharedLibrary: $(OBJ_DIR) $(SOLIB)
 	setUpScripts/fixDyLinking_mac.sh lib $(EXT_PATH)
 
 $(SOLIB): $(OBJNOMAIN)
-	$(CXX) $(COMMON) -shared -o $@ $^ $(LD_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -shared -o $@ $^ $(LD_FLAGS) 
 	
 ############ dylibLibrary
 .PHONY: dylibLibrary
 dylibLibrary: $(OBJ_DIR) $(DYLIB)
 	setUpScripts/fixDyLinking_mac.sh lib $(EXT_PATH)
 $(DYLIB): $(OBJNOMAIN)
-	$(CXX) $(COMMON) -dynamiclib -o $@ $^ $(LD_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -dynamiclib -o $@ $^ $(LD_FLAGS) 
 
 
 ############ clean
@@ -99,18 +104,21 @@ $(INSTALL_DIR):
 	@mkdir -p $(INSTALL_DIR)/lib
 	
 $(INSTALL_DIR)/lib/$(LIBNAME).so: $(OBJNOMAIN)
-	$(CXX) $(COMMON) -shared -o $(realpath $(INSTALL_DIR))/lib/$(LIBNAME).so $^ $(LD_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -shared -o $(realpath $(INSTALL_DIR))/lib/$(LIBNAME).so $^ $(LD_FLAGS) 
 
 $(INSTALL_DIR)/lib/$(LIBNAME).dylib: $(OBJNOMAIN)
-	$(CXX) $(COMMON) -dynamiclib -o $(realpath $(INSTALL_DIR))/lib/$(LIBNAME).dylib $^ $(LD_FLAGS)  
+ifeq ($(UNAME_S), Darwin)
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -dynamiclib -o $(realpath $(INSTALL_DIR))/lib/$(LIBNAME).dylib $^ $(LD_FLAGS)
+endif
+	  
 
 $(INSTALL_DIR)/bin/$(CXXOUTNAME):$(OBJ)
-	$(CXX) $(COMMON) -o $(realpath $(INSTALL_DIR))/bin/$(CXXOUTNAME) $^ $(LD_FLAGS) 
+	$(CXX) $(CXXFLAGS) $(CXXOPT) -o $(realpath $(INSTALL_DIR))/bin/$(CXXOUTNAME) $^ $(LD_FLAGS) 
 
 
 .PHONY moveHeaders:
 moveHeaders: $(INSTALL_DIR)
-	setUpScripts/reDirMove.sh src/ $(INSTALL_DIR)/include/
+	setUpScripts/installHeaders.py -src src/ -dest $(INSTALL_DIR)/include/
 	
 .PHONY unitTest:
 unitTest: 

@@ -1,7 +1,12 @@
 ROOT = $(realpath ./)
 LIB_DIR=$(ROOT)/lib
 
+ifneq (,$(wildcard compfile.mk))
+COMPFILE=compfile.mk
+endif
+
 include $(COMPFILE)
+
 include $(ROOT)/makefile-common.mk
 
 
@@ -113,7 +118,7 @@ $(INSTALL_DIR)/bin/$(CXXOUTNAME):$(OBJ)
 
 .PHONY moveHeaders:
 moveHeaders: $(INSTALL_DIR)
-	setUpScripts/reDirMove.sh src/ $(INSTALL_DIR)/include/
+	setUpScripts/installHeaders.py -src src/ -dest $(INSTALL_DIR)/include/
 	
 .PHONY unitTest:
 unitTest: 

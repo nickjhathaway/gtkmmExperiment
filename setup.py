@@ -37,7 +37,7 @@ class Paths():
         self.paths["armadillo"] = self.__armadillo()
         self.paths["mlpack"] = self.__mlpack()
         self.paths["liblinear"] = self.__liblinear()
-        self.paths["bibcpp"] = self.__bibcpp()
+        self.paths["bibseq"] = self.__bibseq()
         self.paths["catch"] = self.__catch()
 
     def path(self, name):
@@ -108,9 +108,9 @@ class Paths():
         url = "http://freefr.dl.sourceforge.net/project/mathgl/mathgl/mathgl%202.2.1/mathgl-2.2.1.tar.gz"
         return self.__package_dirs(url, "mathgl")
     
-    def __bibcpp(self):
-        url = "https://github.com/bailey-lab/bibcpp.git"
-        name = "bibcpp"
+    def __bibseq(self):
+        url = "https://github.com/bailey-lab/bibseq.git"
+        name = "bibseq"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
@@ -143,7 +143,7 @@ class Setup:
         self.CXX = ""
         self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibcpp"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -161,7 +161,7 @@ class Setup:
                        "mlpack": self.mlpack,
                        "liblinear": self.liblinear,
                        "pear": self.pear,
-                       "bibcpp": self.bibcpp
+                       "bibseq": self.bibseq
                        
                        }
     def __processArgs(self):
@@ -281,10 +281,41 @@ class Setup:
         print "\t getting file..."
         fnp = Utils.get_file_if_size_diff(i.url, self.paths.ext_tars)
         Utils.clear_dir(i.build_dir)
-
+        
         Utils.untar(fnp, i.build_dir)
         try:
             Utils.run_in_dir(cmd, i.build_sub_dir)
+        except:
+            Utils.rm_rf(i.local_dir)
+            sys.exit(1)
+            
+    def __buildFromGit(self, i, cmd):
+        
+        #print CT.bold + CT.black + i.build_dir
+        #print i.build_sub_dir
+        #print i.local_dir
+        #print i.url + CT.reset
+        if os.path.exists(i.build_dir):
+            print "pulling from {url}".format(url=i.url)
+            pCmd = "git pull"
+            try:
+                Utils.run_in_dir(pCmd, i.build_dir)
+            except:
+                print "failed to pull from {url}".format(url=i.url)
+                sys.exit(1)
+        else:
+            print "cloning from {url}".format(url=i.url)
+            cCmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
+            #print self.ext_build
+            try:
+                print "Here?"
+                print self.paths.ext_build
+                Utils.run_in_dir(cCmd, self.paths.ext_build)
+            except:
+                print "failed to clone from {url}".format(url=i.url)
+                sys.exit(1)
+        try:
+            Utils.run_in_dir(cmd, i.build_dir)
         except:
             Utils.rm_rf(i.local_dir)
             sys.exit(1)
@@ -365,26 +396,11 @@ class Setup:
         Utils.run_in_dir(cmd, i.build_dir)
     
     
-    def bibcpp(self):
-        i = self.__path('bibcpp')
-        cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
-        Utils.run(cmd)
-        secondCmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibcpp -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
-        #print secondCmd
-        Utils.run_in_dir(secondCmd, i.build_dir)
-        secondCmd = """./setup.py -compfile compfile.mk""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
-        #print secondCmd
-        Utils.run_in_dir(secondCmd, i.build_dir)
-        secondCmd = """make COMPFILE=compfile.mk -j {num_cores}""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
-        #print secondCmd
-        Utils.run_in_dir(secondCmd, i.build_dir)
-        secondCmd = """make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
-        #print secondCmd
-        Utils.run_in_dir(secondCmd, i.build_dir)
-        i = self.__path('bibcpp')
+    def bibseq(self):
+        i = self.__path('bibseq')
+        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        self.__buildFromGit(i, cmd)
         
-        Utils.run_in_dir(secondCmd, i.build_dir)
-
     def cppcms(self):
         i = self.__path('cppcms')
         if self.args.clang:
@@ -493,7 +509,6 @@ def main():
     if(args.generateSrc):
         startSrc()
         return (0)
-
     s = Setup(args)
     if args.print_libs:
         print "Available installs:"

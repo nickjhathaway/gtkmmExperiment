@@ -71,7 +71,9 @@ do_preReqs: prerequisites
 ############ shared library
 .PHONY: sharedLibrary
 sharedLibrary: $(OBJ_DIR) $(SOLIB)
+ifeq ($(UNAME_S), Darwin)
 	setUpScripts/fixDyLinking_mac.sh lib $(EXT_PATH)
+endif
 
 $(SOLIB): $(OBJNOMAIN)
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -shared -o $@ $^ $(LD_FLAGS) 
@@ -94,9 +96,11 @@ clean:
 ############ install
 .PHONY: install
 install: $(INSTALL_DIR) moveHeaders $(OBJ_DIR) $(INSTALL_DIR)/lib/$(LIBNAME).so $(INSTALL_DIR)/lib/$(LIBNAME).dylib $(INSTALL_DIR)/bin/$(CXXOUTNAME) 
+ifeq ($(UNAME_S), Darwin)
 	setUpScripts/fixDyLinking_mac.sh $(INSTALL_DIR)/lib/ $(EXT_PATH)
 	setUpScripts/fixDyLinking_mac.sh $(INSTALL_DIR)/bin/ $(EXT_PATH)
-	
+endif
+
 $(INSTALL_DIR):
 	@mkdir -p $(INSTALL_DIR)
 	@mkdir -p $(INSTALL_DIR)/include

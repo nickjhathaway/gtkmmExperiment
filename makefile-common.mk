@@ -35,10 +35,10 @@ ifeq ($(USE_ARMADILLO),1)
 endif
 
 #bibcpp
-ifeq ($(USE_BIBCPP),1)
-	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
-			-L$(LOCAL_PATH)/bibcpp/lib  \
+ifeq ($(USE_BIBSEQ),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
+			-L$(LOCAL_PATH)/bibseq/lib  \
 			-lseqTools
 endif
 

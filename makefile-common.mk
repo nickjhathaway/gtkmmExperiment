@@ -34,12 +34,22 @@ ifeq ($(USE_ARMADILLO),1)
 			-larmadillo
 endif
 
-#bibcpp
+#bibseq
 ifeq ($(USE_BIBSEQ),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
 			-L$(LOCAL_PATH)/bibseq/lib  \
 			-lseqTools
+endif
+
+#bibcpp
+ifeq ($(USE_BIBCPP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+	#currently no compiled components so no need for library flags
+	#uncomment bellow in the future if there parts of the package need to be compiled
+	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
+			-L$(LOCAL_PATH)/bibcpp/lib  \
+			-lbibcpp
 endif
 
 #shark

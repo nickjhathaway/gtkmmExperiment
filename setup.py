@@ -38,6 +38,7 @@ class Paths():
         self.paths["mlpack"] = self.__mlpack()
         self.paths["liblinear"] = self.__liblinear()
         self.paths["bibseq"] = self.__bibseq()
+        self.paths["bibcpp"] = self.__bibcpp()
         self.paths["catch"] = self.__catch()
 
     def path(self, name):
@@ -117,6 +118,16 @@ class Paths():
         build_sub_dir = os.path.join(build_dir, fn_noex)
         local_dir = os.path.join(self.install_dir, name)
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
+    
+    def __bibcpp(self):
+        url = "https://github.com/umass-bib/bibcpp.git"
+        name = "bibcpp"
+        build_dir = os.path.join(self.ext_build, name)
+        fn = os.path.basename(url)
+        fn_noex = fn.replace(".git", "")
+        build_sub_dir = os.path.join(build_dir, fn_noex)
+        local_dir = os.path.join(self.install_dir, name)
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __package_dirs(self, url, name):
         build_dir = os.path.join(self.ext_build, name)
@@ -143,7 +154,7 @@ class Setup:
         self.CXX = ""
         self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -161,7 +172,8 @@ class Setup:
                        "mlpack": self.mlpack,
                        "liblinear": self.liblinear,
                        "pear": self.pear,
-                       "bibseq": self.bibseq
+                       "bibseq": self.bibseq,
+                       "bibcpp": self.bibcpp
                        
                        }
     def __processArgs(self):
@@ -399,6 +411,11 @@ class Setup:
     def bibseq(self):
         i = self.__path('bibseq')
         cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        self.__buildFromGit(i, cmd)
+        
+    def bibcpp(self):
+        i = self.__path('bibcpp')
+        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
         self.__buildFromGit(i, cmd)
         
     def cppcms(self):

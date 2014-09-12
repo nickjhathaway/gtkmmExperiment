@@ -24,7 +24,9 @@ COMMON =  $(CXXFLAGS) $(CXXOPT) $(COMLIBS)
 ############ main
 .PHONY: all
 all: $(OBJ_DIR) $(BIN)
+ifeq ($(UNAME_S), Darwin)
 	../setUpScripts/fixDyLinking_mac.sh bin $(EXT_PATH)
+endif
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

@@ -65,7 +65,7 @@ class Paths():
         url = 'https://github.com/ryanhaining/cppitertools.git'
         local_dir = os.path.join(self.install_dir, "cppitertools")
         return BuildPaths(url, '', '', local_dir)
-    
+
     def __catch(self):
         url = 'https://github.com/philsquared/Catch.git'
         local_dir = os.path.join(self.install_dir, "catch")
@@ -102,13 +102,21 @@ class Paths():
         return self.__package_dirs(url, "liblinear")
 
     def __cppcms(self):
-        url = "http://freefr.dl.sourceforge.net/project/cppcms/cppcms/1.0.4/cppcms-1.0.4.tar.bz2"
-        return self.__package_dirs(url, "cppcms")
+        #url = "http://freefr.dl.sourceforge.net/project/cppcms/cppcms/1.0.4/cppcms-1.0.4.tar.bz2"
+        url = "https://github.com/nickjhathaway/cppcmsModified.git"
+        name = "cppcms"
+        build_dir = os.path.join(self.ext_build, name)
+        fn = os.path.basename(url)
+        fn_noex = fn.replace("Modified.git", "")
+        build_sub_dir = os.path.join(build_dir, fn_noex)
+        local_dir = os.path.join(self.install_dir, name)
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
+        #return self.__package_dirs(url, "cppcms")
 
     def __mathgl(self):
         url = "http://freefr.dl.sourceforge.net/project/mathgl/mathgl/mathgl%202.2.1/mathgl-2.2.1.tar.gz"
         return self.__package_dirs(url, "mathgl")
-    
+
     def __bibseq(self):
         url = "https://github.com/bailey-lab/bibseq.git"
         name = "bibseq"
@@ -118,7 +126,7 @@ class Paths():
         build_sub_dir = os.path.join(build_dir, fn_noex)
         local_dir = os.path.join(self.install_dir, name)
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
-    
+
     def __bibcpp(self):
         url = "https://github.com/umass-bib/bibcpp.git"
         name = "bibcpp"
@@ -174,8 +182,8 @@ class Setup:
                        "pear": self.pear,
                        "bibseq": self.bibseq,
                        "bibcpp": self.bibcpp
-                       
                        }
+
     def __processArgs(self):
         dirs = self.args.dirsToDelete
         if dirs:
@@ -194,47 +202,52 @@ class Setup:
         if self.args.compfile:
             self.parseSetUpNeeded(self.args.compfile[0])
             self.parserForCompilers(self.args.compfile[0])
-    
-    def parseForExtPath(self, compfile):
-        compfile = open(compfile)
-        for line in compfile:
-            values = line.split("=")
-            firstArg = values[0].strip()
-            if (firstArg == "EXT_PATH"):
-               pathPreProcess = values[1].strip()
-               pathPreProcess = pathPreProcess.replace("$(realpath", "")
-               pathPreProcess = pathPreProcess.replace(")", "")
-               pathPreProcess = pathPreProcess.strip()
-        return pathPreProcess
-            
-               
-    
-    def parseSetUpNeeded(self, compfile):
-        compfile = open(compfile)
-        for line in compfile:
-            values = line.split("=")
-            firstArg = values[0].strip()
-            if (firstArg.find("USE_") != -1 and line.find("1") != -1):
-               self.setUpNeeded.append(firstArg)
 
-    def parserForCompilers(self, compfile):
-        compfile = open(compfile)
-        for line in compfile:
-            values = line.split("=")
-            if(values[0].strip()=="CC"):
-                self.CC = values[1].strip()
-            elif(values[0].strip() == "CXX"):
-                self.CXX = values[1].strip()
-                if "clang" in self.CXX:
-                    self.args.clang = True
+    def parseForExtPath(self, fn):
+        args = self.parseCompFile(fn)
+        if "EXT_PATH" in args:
+            extPath = args["EXT_PATH"].strip()
+            extPath = extPath.replace("$(realpath", "")
+            extPath = extPath.replace(")", "")
+            extPath = extPath.strip()
+        else:
+            print "did not find external folder location; assuming ./external"
+            extPath = "./external"
+        return extPath
+
+    def parseSetUpNeeded(self, fn):
+        args = self.parseCompFile(fn)
+        for k,v in args.iteritems():
+            if k.startswith("USE_"):
+                if '1' == v:
+                    self.setUpNeeded.append(k)
+
+    def parseCompFile(self, fn):
+        ret = {}
+        with open(fn) as f:
+            for line in f:
+                if '=' in line:
+                    toks = line.split('=')
+                    ret[toks[0].strip()] = toks[1].strip()
+        return ret
+
+    def parserForCompilers(self, fn):
+        args = self.parseCompFile(fn)
+        if 'CC' in args:
+            self.CC = args['CC']
+        if 'CXX' in args:
+            self.CXX = args['CXX']
+            if "clang" in self.CXX:
+                self.args.clang = True
+
     def __path(self, name):
         return self.paths.path(name)
 
     def __setup(self, name, builder_f):
         if os.path.exists(self.__path(name).local_dir):
-            print name, "\033[1;32mfound\033[0m"
+            print name, CT.boldGreen("found")
         else:
-            print name, "\033[1;31mNOT found; building...\033[0m"
+            print name, CT.boldRed("NOT"), "found; building..."
             try:
                 builder_f()
                 self.installed = self.installed + [name]
@@ -242,13 +255,31 @@ class Setup:
                 print "failed to install " + name
                 self.failedInstall = self.failedInstall + [name]
 
+    def showDefaultExample(self):
+        print """
+Need to supply compfile to parse for needed libraries and compilers"
+by giving -compfile"
+
+example:
+
+./setUpScripts/generateCompFile.py -outFilename compfile.mk \
+-externalLoc external \
+-CC gcc -CXX g++ \
+-outname seqTools \
+-installName bibseq \
+-neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl
+
+./setup.py -compfile compfile.mk
+
+make COMPFILE=compfile.mk -j {num_cores}
+"""
+
     def setup(self):
         dirs = self.args.dirsToDelete
         libsToInstall = []
         if not dirs:
             if not self.args.compfile:
-                print "Need to supply compfile to parse for needed libraries and compilers"
-                print "by giving -compfile"
+                self.showDefaultExample()
                 exit(1)
 
             for libNeeded in self.setUpNeeded:
@@ -273,13 +304,12 @@ class Setup:
                 print "Unrecognized option " + lib
             else:
                 self.__setup(lib, self.setUps[lib])
-        for inst in self.installed:
-            print "\033[1;30m" + inst + " \033[0m", "\033[1;32minstalled\033[0m"
-            #"\033[1;" + colorCode + "m" + title + "\033[0m"
-        for fail in self.failedInstall:
-            print "\033[1;30m" + fail + " \033[0m", "\033[1;31mfailed install\033[0m"
 
+        for p in self.installed:
+            print p, CT.boldGreen("installed")
 
+        for p in self.failedInstall:
+            print  p, CT.boldRed("failed to install")
 
     def num_cores(self):
         c = Utils.num_cores()
@@ -293,20 +323,15 @@ class Setup:
         print "\t getting file..."
         fnp = Utils.get_file_if_size_diff(i.url, self.paths.ext_tars)
         Utils.clear_dir(i.build_dir)
-        
+
         Utils.untar(fnp, i.build_dir)
         try:
             Utils.run_in_dir(cmd, i.build_sub_dir)
         except:
             Utils.rm_rf(i.local_dir)
             sys.exit(1)
-            
+
     def __buildFromGit(self, i, cmd):
-        
-        #print CT.bold + CT.black + i.build_dir
-        #print i.build_sub_dir
-        #print i.local_dir
-        #print i.url + CT.reset
         if os.path.exists(i.build_dir):
             print "pulling from {url}".format(url=i.url)
             pCmd = "git pull"
@@ -318,9 +343,7 @@ class Setup:
         else:
             print "cloning from {url}".format(url=i.url)
             cCmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
-            #print self.ext_build
             try:
-                print "Here?"
                 print self.paths.ext_build
                 Utils.run_in_dir(cCmd, self.paths.ext_build)
             except:
@@ -373,7 +396,7 @@ class Setup:
         cmd = " ".join(cmd.split())
 
         self.__build(i, cmd)
-    
+
     def installRPackageSource(self, sourceFile):
         i = self.__path("R-devel")
         for pack in sourceFile.split(","):
@@ -385,7 +408,7 @@ class Setup:
                 """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '),SOURCEFILE = pack )
             print CT.boldBlack(cmd)
             Utils.run(cmd)
-    
+
     def installRPackageName(self, packageName):
         i = self.__path("R-devel")
         for pack in packageName.split(","):
@@ -397,7 +420,7 @@ class Setup:
                 """.format(local_dir=shellquote(i.local_dir).replace(' ', '\ '),PACKAGENAME = pack )
             print CT.boldBlack(cmd)
             Utils.run(cmd)
-    
+
     def bamtools(self):
         i = self.__path('bamtools')
         cmd = "git clone {url} {d}".format(url=i.url, d=i.build_dir)
@@ -406,27 +429,24 @@ class Setup:
         cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(
             local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         Utils.run_in_dir(cmd, i.build_dir)
-    
-    
+
+
     def bibseq(self):
         i = self.__path('bibseq')
-        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl,bibcpp && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
-        
+
     def bibcpp(self):
         i = self.__path('bibcpp')
-        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc) 
+        cmd = """./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl && ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
-        
+
     def cppcms(self):
         i = self.__path('cppcms')
-        if self.args.clang:
-            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
-        else:
-            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} CPPFLAGS=-stdlib=libstdc++ cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && CPPFLAGS=-stdlib=libstdc++ make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+        cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)  
         if(sys.platform == "darwin"):
             cmd += " && install_name_tool -change libbooster.0.dylib {local_dir}/lib/libbooster.0.dylib {local_dir}/lib/libcppcms.1.dylib".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores())
-        self.__build(i, cmd)
+        self.__buildFromGit(i, cmd)
 
     def armadillo(self):
         i = self.__path('armadillo')
@@ -481,15 +501,13 @@ mkdir -p build
 
     def cppprogutils(self):
         self.__git(self.__path('cppprogutils'))
-        
+
     def catch(self):
         self.__git(self.__path('catch'))
 
     def ubuntu(self):
         pkgs = """libbz2-dev python2.7-dev cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev
 python doxygen doxygen-gui auctex xindy graphviz libcurl4-openssl-dev""".split()
-
-
 
 def startSrc():
     if not os.path.isdir("src/"):
@@ -512,20 +530,20 @@ def parse_args():
     parser.add_argument('-generateSrc', dest = 'generateSrc', action = 'store_true' )
     return parser.parse_args()
 
-
 def main():
     args = parse_args()
     if(args.instRPackageName):
         s = Setup(args)
         s.installRPackageName(args.instRPackageName[0])
-        return (0)
+        return 0
     if(args.instRPackageSource):
         s = Setup(args)
         s.installRPackageSource(args.instRPackageSource[0])
-        return (0)
+        return 0
     if(args.generateSrc):
         startSrc()
-        return (0)
+        return 0
+
     s = Setup(args)
     if args.print_libs:
         print "Available installs:"
@@ -541,4 +559,5 @@ def main():
             Utils.run(cmd)
     else:
         s.setup()
+
 main()

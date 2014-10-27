@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import shutil, os, argparse, sys
 
 
 def genPyHello(outFileName):
     with open(outFileName, "w") as f:
-        f.write("#!/usr/bin/python\n")
+        f.write("#!/usr/bin/env python\n")
         f.write("\n")
         f.write("import shutil, os, argparse, sys, stat\n")
         f.write("\n")

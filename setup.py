@@ -102,16 +102,17 @@ class Paths():
         return self.__package_dirs(url, "liblinear")
 
     def __cppcms(self):
-        #url = "http://freefr.dl.sourceforge.net/project/cppcms/cppcms/1.0.4/cppcms-1.0.4.tar.bz2"
-        url = "https://github.com/nickjhathaway/cppcmsModified.git"
+        url = "http://freefr.dl.sourceforge.net/project/cppcms/cppcms/1.0.5/cppcms-1.0.5.tar.bz2"
+        return self.__package_dirs(url, "cppcms")
+        '''url = "https://github.com/nickjhathaway/cppcmsModified.git"
         name = "cppcms"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace("Modified.git", "")
         build_sub_dir = os.path.join(build_dir, fn_noex)
         local_dir = os.path.join(self.install_dir, name)
-        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
-        #return self.__package_dirs(url, "cppcms")
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)'''
+        
 
     def __mathgl(self):
         url = "http://freefr.dl.sourceforge.net/project/mathgl/mathgl/mathgl%202.2.1/mathgl-2.2.1.tar.gz"
@@ -446,7 +447,7 @@ make COMPFILE=compfile.mk -j {num_cores}
         cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)  
         if(sys.platform == "darwin"):
             cmd += " && install_name_tool -change libbooster.0.dylib {local_dir}/lib/libbooster.0.dylib {local_dir}/lib/libcppcms.1.dylib".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores())
-        self.__buildFromGit(i, cmd)
+        self.__build(i, cmd)
 
     def armadillo(self):
         i = self.__path('armadillo')
@@ -482,8 +483,13 @@ mkdir -p build
 
     def mathgl(self):
         i = self.__path('mathgl')
-        cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(
+        if (self.args.clang):
+            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} -Denable-pthread=ON -Denable-openmp=OFF .. && make -j {num_cores} install".format(
             local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+        else:
+            cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir}  .. && make -j {num_cores} install".format(
+            local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
+                        
         self.__build(i, cmd)
 
     def __git(self, i):

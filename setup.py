@@ -32,6 +32,7 @@ class Paths():
         self.paths["R-devel"] = self.__Rdevel()
         self.paths["cppcms"] = self.__cppcms()
         self.paths["bamtools"] = self.__bamtools()
+        self.paths["jsoncpp"] = self.__jsoncpp()
         self.paths["pear"] = self.__pear()
         self.paths["mathgl"] = self.__mathgl()
         self.paths["armadillo"] = self.__armadillo()
@@ -54,6 +55,16 @@ class Paths():
     def __bamtools(self):
         url = 'https://github.com/pezmaster31/bamtools.git'
         name = "bamtools"
+        build_dir = os.path.join(self.ext_build, name)
+        fn = os.path.basename(url)
+        fn_noex = fn.replace(".git", "")
+        build_sub_dir = os.path.join(build_dir, fn_noex)
+        local_dir = os.path.join(self.install_dir, name)
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
+    
+    def __jsoncpp(self):
+        url = "https://github.com/open-source-parsers/jsoncpp.git"
+        name = "jsoncpp"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
@@ -163,7 +174,7 @@ class Setup:
         self.CXX = ""
         self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp", "jsoncpp"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -182,7 +193,8 @@ class Setup:
                        "liblinear": self.liblinear,
                        "pear": self.pear,
                        "bibseq": self.bibseq,
-                       "bibcpp": self.bibcpp
+                       "bibcpp": self.bibcpp,
+                       "jsoncpp": self.jsoncpp
                        }
 
     def __processArgs(self):
@@ -441,7 +453,13 @@ make COMPFILE=compfile.mk -j {num_cores}
         i = self.__path('bibcpp')
         cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
-
+    
+    def jsoncpp(self):
+        i = self.__path('jsoncpp')
+        cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(
+            local_dir=shellquote(i.local_dir), num_cores=self.num_cores(),CC=self.CC, CXX=self.CXX)
+        self.__buildFromGit(i, cmd)
+    
     def cppcms(self):
         i = self.__path('cppcms')
         cmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install".format(local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)  

@@ -8,6 +8,16 @@ SRC = -I./src/
 COMLIBS += $(LOCALTOOLS) $(EXTTOOLS) $(SRC)
 
 
+#jsoncpp
+#cppcms
+ifeq ($(USE_JSONCPP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/jsoncpp/include
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/jsoncpp/lib \
+			-L$(LOCAL_PATH)/jsoncpp/lib  \
+			-ljsoncpp
+endif
+
+
 #boost
 ifeq ($(USE_BOOST),1)
 	CXXOPT += -DBOOST_UBLAS_NDEBUG

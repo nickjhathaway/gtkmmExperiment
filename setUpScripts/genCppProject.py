@@ -95,7 +95,7 @@ def main():
     installName = args.projName[0]
     neededLibs = "none"        
     if args.externalLoc:
-        external = args.externalLoc[0]
+        external = os.path.realpath(args.externalLoc[0])
     if args.neededLibs:
         neededLibs = args.neededLibs[0].split(",")
     genHelper.generateCompfileFull(os.path.join(projectOut, "compfile.mk"), external, CC, CXX, outname, installName, prefix, neededLibs)

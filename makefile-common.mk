@@ -7,9 +7,38 @@ EXTTOOLS = -I$(EXT_PATH)
 SRC = -I./src/
 COMLIBS += $(LOCALTOOLS) $(EXTTOOLS) $(SRC)
 
+#bibcpp
+ifeq ($(USE_BIBCPP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+	USE_JSONCPP=1;
+	USE_BOOST=1;
+	
+	#currently no compiled components so no need for library flags
+	#uncomment bellow in the future if there parts of the package need to be compiled
+	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
+			-L$(LOCAL_PATH)/bibcpp/lib  \
+			-lbibcpp
+endif
+
+#bibseq
+ifeq ($(USE_BIBSEQ),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
+	ifeq (,$(findstring $(COMLIBS),bibcpp))
+		COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+		USE_JSONCPP=1;
+		USE_BOOST=1;
+	endif
+	USE_BAMTOOLS=1;
+	USE_R=1;
+	USE_CURL=1;
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
+			-L$(LOCAL_PATH)/bibseq/lib  \
+			-lseqTools
+endif
+
+
 
 #jsoncpp
-#cppcms
 ifeq ($(USE_JSONCPP),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/jsoncpp/include
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/jsoncpp/lib \
@@ -44,23 +73,9 @@ ifeq ($(USE_ARMADILLO),1)
 			-larmadillo
 endif
 
-#bibseq
-ifeq ($(USE_BIBSEQ),1)
-	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
-	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
-			-L$(LOCAL_PATH)/bibseq/lib  \
-			-lseqTools
-endif
 
-#bibcpp
-ifeq ($(USE_BIBCPP),1)
-	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-	#currently no compiled components so no need for library flags
-	#uncomment bellow in the future if there parts of the package need to be compiled
-	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
-			-L$(LOCAL_PATH)/bibcpp/lib  \
-			-lbibcpp
-endif
+
+
 
 #shark
 ifeq ($(USE_SHARK),1)

@@ -452,12 +452,12 @@ make COMPFILE=compfile.mk -j {num_cores}
 
     def bibseq(self):
         i = self.__path('bibseq')
-        cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl,bibcpp && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
+        cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname seqTools -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl,bibcpp,jsoncpp && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
 
     def bibcpp(self):
         i = self.__path('bibcpp')
-        cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
+        cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibcpp -installName bibcpp -prefix {localTop} -neededLibs cppitertools,boost,curl,jsoncpp && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
     
     def jsoncpp(self):

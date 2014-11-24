@@ -10,8 +10,8 @@ COMLIBS += $(LOCALTOOLS) $(EXTTOOLS) $(SRC)
 #bibcpp
 ifeq ($(USE_BIBCPP),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-	USE_JSONCPP=1;
-	USE_BOOST=1;
+	USE_JSONCPP=1
+	USE_BOOST=1
 	
 	#currently no compiled components so no need for library flags
 	#uncomment bellow in the future if there parts of the package need to be compiled
@@ -25,12 +25,12 @@ ifeq ($(USE_BIBSEQ),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
 	ifeq (,$(findstring $(COMLIBS),bibcpp))
 		COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-		USE_JSONCPP=1;
-		USE_BOOST=1;
+		USE_JSONCPP=1
+		USE_BOOST=1
 	endif
-	USE_BAMTOOLS=1;
-	USE_R=1;
-	USE_CURL=1;
+	USE_BAMTOOLS=1
+	USE_R=1
+	USE_CURL=1
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
 			-L$(LOCAL_PATH)/bibseq/lib  \
 			-lseqTools

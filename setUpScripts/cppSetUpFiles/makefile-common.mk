@@ -33,7 +33,7 @@ ifeq ($(USE_BIBSEQ),1)
 	USE_CURL=1
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseq/lib \
 			-L$(LOCAL_PATH)/bibseq/lib  \
-			-lseqTools
+			-lbibseq
 endif
 
 

@@ -20,6 +20,23 @@ ifeq ($(USE_BIBCPP),1)
 			-lbibcpp
 endif
 
+#SeekDeep
+ifeq ($(USE_SEEKDEEP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/SeekDeep/include
+	ifeq (,$(findstring $(COMLIBS),bibcpp))
+		COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+		USE_JSONCPP=1
+		USE_BOOST=1
+	endif
+	USE_BAMTOOLS=1
+	USE_R=1
+	USE_CURL=1
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/SeekDeep/lib \
+			-L$(LOCAL_PATH)/SeekDeep/lib  \
+			-lSeekDeep
+endif
+
+
 #bibseq
 ifeq ($(USE_BIBSEQ),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include

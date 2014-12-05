@@ -40,6 +40,7 @@ class Paths():
         self.paths["liblinear"] = self.__liblinear()
         self.paths["bibseq"] = self.__bibseq()
         self.paths["bibcpp"] = self.__bibcpp()
+        self.paths["seekdeep"] = self.__SeekDeep()
         self.paths["catch"] = self.__catch()
 
     def path(self, name):
@@ -138,6 +139,16 @@ class Paths():
         build_sub_dir = os.path.join(build_dir, fn_noex)
         local_dir = os.path.join(self.install_dir, name)
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
+    
+    def __SeekDeep(self):
+        url = "https://github.com/bailey-lab/SeekDeep.git"
+        name = "SeekDeep"
+        build_dir = os.path.join(self.ext_build, name)
+        fn = os.path.basename(url)
+        fn_noex = fn.replace(".git", "")
+        build_sub_dir = os.path.join(build_dir, fn_noex)
+        local_dir = os.path.join(self.install_dir, name)
+        return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __bibcpp(self):
         url = "https://github.com/umass-bib/bibcpp.git"
@@ -174,7 +185,7 @@ class Setup:
         self.CXX = ""
         self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp", "jsoncpp"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp", "jsoncpp", "SeekDeep"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -193,6 +204,7 @@ class Setup:
                        "liblinear": self.liblinear,
                        "pear": self.pear,
                        "bibseq": self.bibseq,
+                       "seekdeep": self.SeekDeep,
                        "bibcpp": self.bibcpp,
                        "jsoncpp": self.jsoncpp
                        }
@@ -258,7 +270,7 @@ class Setup:
 
     def __setup(self, name, builder_f):
         if os.path.exists(self.__path(name).local_dir):
-            print name, CT.boldGreen("found")
+            print name, CT.boldGreen("found at ") + CT.boldBlack(self.__path(name).local_dir)
         else:
             print name, CT.boldRed("NOT"), "found; building..."
             try:
@@ -453,6 +465,11 @@ make COMPFILE=compfile.mk -j {num_cores}
     def bibseq(self):
         i = self.__path('bibseq')
         cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname bibseq -installName bibseq -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl,bibcpp,jsoncpp && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
+        self.__buildFromGit(i, cmd)
+        
+    def SeekDeep(self):
+        i = self.__path('seekdeep')
+        cmd = """python ./setUpScripts/generateCompFile.py -outFilename compfile.mk -externalLoc {external} -CC {CC} -CXX {CXX} -outname SeekDeep -installName SeekDeep -prefix {localTop} -neededLibs zi_lib,cppitertools,cppprogutils,boost,R,bamtools,pear,curl,bibcpp,jsoncpp,bibseq && python ./setup.py -compfile compfile.mk && make COMPFILE=compfile.mk -j {num_cores} && make COMPFILE=compfile.mk install""".format(localTop=shellquote(self.paths.install_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX, external=self.extDirLoc)
         self.__buildFromGit(i, cmd)
 
     def bibcpp(self):

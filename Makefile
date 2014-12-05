@@ -51,7 +51,7 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(OBJ_DIR)/$(shell dirname $<)
-	$(CXX) -DNOT_HEADER_ONLY $(COMMON) -fpic -c $< -o $@
+	$(CXX) -DNOT_HEADER_ONLY $(COMMON) -fPIC -c $< -o $@
 
 $(BIN): $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(CXXOPT) -o $@ $^ $(LD_FLAGS) 

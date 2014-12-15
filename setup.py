@@ -131,8 +131,8 @@ class Paths():
         return self.__package_dirs(url, "mathgl")
 
     def __bibseq(self):
-        url = "https://github.com/bailey-lab/bibseq.git"
-        name = "bibseq"
+        url = "https://github.com/bailey-lab/bibseqPrivate.git"
+        name = "bibseqPrivate"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
@@ -141,8 +141,8 @@ class Paths():
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
     
     def __SeekDeep(self):
-        url = "https://github.com/bailey-lab/SeekDeep.git"
-        name = "SeekDeep"
+        url = "https://github.com/bailey-lab/SeekDeepPrivate.git"
+        name = "SeekDeepPrivate"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
@@ -151,8 +151,8 @@ class Paths():
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __bibcpp(self):
-        url = "https://github.com/umass-bib/bibcpp.git"
-        name = "bibcpp"
+        url = "https://github.com/umass-bib/bibcppDev.git"
+        name = "bibcppDev"
         build_dir = os.path.join(self.ext_build, name)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
@@ -385,9 +385,9 @@ make COMPFILE=compfile.mk -j {num_cores}
         if self.args.clang:
              if isMac():
                 cmd = """
-                wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir}&&  ./b2  -d 2 toolset=clang cxxflags=\"-stdlib=libc++\" linkflags=\"-stdlib=libc++\" --with-libraries=date_time,filesystem,iostreams,math,program_options,random,regex,serialization,signals,system,test,thread,log -j {num_cores} install &&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
+                wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir} --with-libraries=date_time,filesystem,iostreams,math,program_options,random,regex,serialization,signals,system,test,thread,log  &&  ./b2  -d 2 toolset=clang cxxflags=\"-stdlib=libc++\" linkflags=\"-stdlib=libc++\" -j {num_cores} install &&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
              else:
-                cmd = """wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir}&&  ./b2  -d 2 toolset=clang --with-libraries=date_time,filesystem,iostreams,math,program_options,random,regex,serialization,signals,system,test,thread,log-j {num_cores} install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
+                cmd = """wget https://github.com/boostorg/atomic/commit/6bb71fdd.diff && wget https://github.com/boostorg/atomic/commit/e4bde20f.diff&&  wget https://gist.githubusercontent.com/philacs/375303205d5f8918e700/raw/d6ded52c3a927b6558984d22efe0a5cf9e59cd8c/0005-Boost.S11n-include-missing-algorithm.patch&&  patch -p2 -i 6bb71fdd.diff&&  patch -p2 -i e4bde20f.diff&&  patch -p1 -i 0005-Boost.S11n-include-missing-algorithm.patch&&  echo "using clang;  " >> tools/build/v2/user-config.jam&&  ./bootstrap.sh --with-toolset=clang --prefix={local_dir}  --with-libraries=date_time,filesystem,iostreams,math,program_options,random,regex,serialization,signals,system,test,thread,log &&  ./b2  -d 2 toolset=clang -j {num_cores} install""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())
         elif self.CXX == "g++-4.8":
             if isMac():
                 cmd = """echo "using gcc : 4.8 : g++-4.8 ; " >> tools/build/v2/user-config.jam && ./bootstrap.sh --prefix={local_dir} --with-libraries=date_time,filesystem,iostreams,math,program_options,random,regex,serialization,signals,system,test,thread,log && ./b2 -d 2 toolset=darwin-4.8 -j {num_cores} install && install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_thread.dylib&&  install_name_tool -change libboost_system.dylib {local_dir}/lib/libboost_system.dylib {local_dir}/lib/libboost_filesystem.dylib""".format(local_dir=shellquote(i.local_dir).replace(' ', '\ '), num_cores=self.num_cores())

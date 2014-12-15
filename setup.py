@@ -137,7 +137,7 @@ class Paths():
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
         build_sub_dir = os.path.join(build_dir, fn_noex)
-        local_dir = os.path.join(self.install_dir, name)
+        local_dir = os.path.join(self.install_dir, "bibseq")
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
     
     def __SeekDeep(self):
@@ -147,7 +147,7 @@ class Paths():
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
         build_sub_dir = os.path.join(build_dir, fn_noex)
-        local_dir = os.path.join(self.install_dir, name)
+        local_dir = os.path.join(self.install_dir, "SeekDeep")
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __bibcpp(self):
@@ -157,7 +157,7 @@ class Paths():
         fn = os.path.basename(url)
         fn_noex = fn.replace(".git", "")
         build_sub_dir = os.path.join(build_dir, fn_noex)
-        local_dir = os.path.join(self.install_dir, name)
+        local_dir = os.path.join(self.install_dir, "bibcpp")
         return BuildPaths(url, build_dir, build_sub_dir, local_dir)
 
     def __package_dirs(self, url, name):

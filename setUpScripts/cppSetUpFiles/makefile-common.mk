@@ -128,7 +128,7 @@ endif
 
 #bamtools
 ifeq ($(USE_BAMTOOLS),1)
-	COMLIBS += -I$(LOCAL_PATH)/bamtools/include/bamtools
+	COMLIBS += -isystem$(LOCAL_PATH)/bamtools/include/bamtools
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bamtools/lib/bamtools \
 			-L$(LOCAL_PATH)/bamtools/lib/bamtools\
 			-lbamtools

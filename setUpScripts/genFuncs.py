@@ -15,7 +15,7 @@ class genHelper:
             f.write("CXX = {CXX}\n".format(CXX = cxx))
             f.write("CXXOUTNAME = {NAME_OF_PROGRAM}\n".format(NAME_OF_PROGRAM = outName))
             #f.write("CXXFLAGS = -std=c++11 -Wall -ftemplate-depth=1024\n")
-            f.write("CXXFLAGS = -std=c++14 -Wall -ftemplate-depth=1024\n")
+            f.write("CXXFLAGS = -std=c++1y -Wall -ftemplate-depth=1024\n")
             f.write("CXXOPT += -O2 -funroll-loops -DNDEBUG  \n")
             f.write("ifneq ($(shell uname -s),Darwin)\n")
             f.write("\tCXXOPT += -march=native -mtune=native\n" )

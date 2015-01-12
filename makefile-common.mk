@@ -7,30 +7,30 @@ EXTTOOLS = -I$(EXT_PATH)
 SRC = -I./src/
 COMLIBS += $(LOCALTOOLS) $(EXTTOOLS) $(SRC)
 
-#bibcpp
-ifeq ($(USE_BIBCPP),1)
-	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-	USE_JSONCPP=1
-	USE_BOOST=1
-	
-	#currently no compiled components so no need for library flags
-	#uncomment bellow in the future if there parts of the package need to be compiled
-	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
-			-L$(LOCAL_PATH)/bibcpp/lib  \
-			-lbibcpp
+
+#TwoBit
+ifeq ($(USE_TWOBIT),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/TwoBit/include
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/TwoBit/lib \
+			-L$(LOCAL_PATH)/TwoBit/lib  \
+			-lTwoBit
+endif
+
+
+#SeqServer
+ifeq ($(USE_SEQSERVER),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/seqServer/include
+	USE_BIBSEQ=1
+	USE_CPPCMS=1
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/seqServer/lib \
+			-L$(LOCAL_PATH)/seqServer/lib  \
+			-lseqServer
 endif
 
 #SeekDeep
 ifeq ($(USE_SEEKDEEP),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/SeekDeep/include
-	ifeq (,$(findstring $(COMLIBS),bibcpp))
-		COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-		USE_JSONCPP=1
-		USE_BOOST=1
-	endif
-	USE_BAMTOOLS=1
-	USE_R=1
-	USE_CURL=1
+	USE_BIBSEQ=1
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/SeekDeep/lib \
 			-L$(LOCAL_PATH)/SeekDeep/lib  \
 			-lSeekDeep
@@ -40,11 +40,7 @@ endif
 #bibseq
 ifeq ($(USE_BIBSEQ),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibseq/include
-	ifeq (,$(findstring $(COMLIBS),bibcpp))
-		COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
-		USE_JSONCPP=1
-		USE_BOOST=1
-	endif
+	USE_BIBCPP=1
 	USE_ARMADILLO=1
 	USE_BAMTOOLS=1
 	USE_R=1
@@ -54,6 +50,17 @@ ifeq ($(USE_BIBSEQ),1)
 			-lbibseq
 endif
 
+#bibcpp
+ifeq ($(USE_BIBCPP),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
+	USE_JSONCPP=1
+	USE_BOOST=1
+	#currently no compiled components so no need for library flags
+	#uncomment bellow in the future if there parts of the package need to be compiled
+	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
+			-L$(LOCAL_PATH)/bibcpp/lib  \
+			-lbibcpp
+endif
 
 
 #jsoncpp

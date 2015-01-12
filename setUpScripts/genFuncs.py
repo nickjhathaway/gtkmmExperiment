@@ -6,7 +6,7 @@ import shutil, os, argparse, sys, stat
 class genHelper:
     @staticmethod
     def generateCompfileFull(outFileName, externalDirLoc, cc, cxx, outName, installDirName, installDirLoc, neededLibs):
-        availableLibs = ["CPPITERTOOLS","CPPPROGUTILS","ZI_LIB","BOOST","R","BAMTOOLS","CPPCMS","MATHGL","ARMADILLO","MLPACK","LIBLINEAR","PEAR","CURL","GTKMM", "BIBSEQ", "BIBCPP", "CATCH", "JSONCPP", "SEEKDEEP"]
+        availableLibs = ["CPPITERTOOLS","CPPPROGUTILS","ZI_LIB","BOOST","R","BAMTOOLS","CPPCMS","MATHGL","ARMADILLO","MLPACK","LIBLINEAR","PEAR","CURL","GTKMM", "BIBSEQ", "BIBCPP", "CATCH", "JSONCPP", "SEEKDEEP", "TWOBIT", "SEQSERVER"]
         neededLibs = map(lambda x:x.upper(), neededLibs)
         """@todo: Make some of these default to an envirnment CC and CXX and maybe even CXXFLAGS as well 
             @todo: Make availableLibs a more universal constant"""
@@ -36,7 +36,7 @@ class genHelper:
 
     @staticmethod            
     def determineCC(args):
-        defaultCC = "gcc-4.8"
+        defaultCC = "clang"
         if not args.CC:
             eCC = os.getenv("CC")
             if(eCC):
@@ -46,7 +46,7 @@ class genHelper:
         return defaultCC
     @staticmethod
     def determineCXX(args):
-        defaultCXX = "g++-4.8"
+        defaultCXX = "clang++"
         if not args.CXX:
             eCXX = os.getenv("CXX")
             if  eCXX:

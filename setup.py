@@ -26,6 +26,7 @@ class Paths():
         Utils.mkdir(self.ext_build)
         self.paths = {}
         self.paths["zi_lib"] = self.__zi_lib()
+        self.paths["pstreams"] = self.__pstreams()
         self.paths["cppitertools"] = self.__cppitertools()
         self.paths["cppprogutils"] = self.__cppprogutils()
         self.paths["boost"] = self.__boost()
@@ -51,6 +52,11 @@ class Paths():
     def __zi_lib(self):
         url = 'https://github.com/weng-lab/zi_lib.git'
         local_dir = os.path.join(self.install_dir, "zi_lib")
+        return BuildPaths(url, '', '', local_dir)
+    
+    def __pstreams(self):
+        url = 'http://git.code.sf.net/p/pstreams/code'
+        local_dir = os.path.join(self.install_dir, "pstreams")
         return BuildPaths(url, '', '', local_dir)
 
     def __bamtools(self):
@@ -185,7 +191,7 @@ class Setup:
         self.CXX = ""
         self.externalLoc = ""
         self.bibCppSetUps = ["zi_lib", "cppitertools", "cppprogutils",  "boost", "R-devel", "bamtools", "pear", "catch"]
-        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp", "jsoncpp", "SeekDeep"]
+        self.allSetUps = self.bibCppSetUps + ["cppcms", "mathgl", "armadillo", "mlpack", "liblinear", "bibseq", "bibcpp", "jsoncpp", "SeekDeep", "pstreams"]
         self.__initSetUps()
         self.__processArgs()
 
@@ -206,7 +212,8 @@ class Setup:
                        "bibseq": self.bibseq,
                        "seekdeep": self.SeekDeep,
                        "bibcpp": self.bibcpp,
-                       "jsoncpp": self.jsoncpp
+                       "jsoncpp": self.jsoncpp,
+                       "pstreams": self.pstreams
                        }
 
     def __processArgs(self):
@@ -544,6 +551,9 @@ mkdir -p build
 
     def zi_lib(self):
         self.__git(self.__path('zi_lib'))
+        
+    def pstreams(self):
+        self.__git(self.__path('pstreams'))
 
     def cppitertools(self):
         self.__git(self.__path('cppitertools'))

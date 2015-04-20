@@ -123,11 +123,10 @@ endif
 #ZI_LIB
 ifeq ($(USE_ZI_LIB),1)
 	COMLIBS += -I$(LOCAL_PATH)/zi_lib
-	#CXXFLAGS += -DZI_USE_OPENMP
 	ifeq ($(UNAME_S),Darwin)
 
 	else
-		CXXFLAGS += -DZI_USE_OPENMP
+		#CXXFLAGS += -DZI_USE_OPENMP
     	LD_FLAGS += -lrt
 	endif
 endif

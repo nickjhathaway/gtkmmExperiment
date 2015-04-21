@@ -57,6 +57,7 @@ ifeq ($(USE_BIBCPP),1)
 	USE_BOOST=1
 	#currently no compiled components so no need for library flags
 	#uncomment bellow in the future if there parts of the package need to be compiled
+	LD_FLAGS += -lpthread
 	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcpp/lib \
 			-L$(LOCAL_PATH)/bibcpp/lib  \
 			-lbibcpp

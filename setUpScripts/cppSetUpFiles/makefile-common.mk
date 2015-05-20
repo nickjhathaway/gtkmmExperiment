@@ -20,7 +20,7 @@ endif
 #SeqServer
 ifeq ($(USE_SEQSERVER),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/seqServer/include
-	USE_BIBSEQ=1
+	USE_BIBSEQDEV=1
 	USE_CPPCMS=1
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/seqServer/lib \
 			-L$(LOCAL_PATH)/seqServer/lib  \
@@ -34,6 +34,15 @@ ifeq ($(USE_SEEKDEEP),1)
 	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/SeekDeep/lib \
 			-L$(LOCAL_PATH)/SeekDeep/lib  \
 			-lSeekDeep
+endif
+
+#SeekDeepDev
+ifeq ($(USE_SEEKDEEPDEV),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/SeekDeepDev/include
+	USE_BIBSEQDEV=1
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/SeekDeepDev/lib \
+			-L$(LOCAL_PATH)/SeekDeepDev/lib  \
+			-lSeekDeepDev
 endif
 
 
@@ -50,6 +59,20 @@ ifeq ($(USE_BIBSEQ),1)
 			-lbibseq
 endif
 
+#bibseqDev
+ifeq ($(USE_BIBSEQDEV),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibseqDev/include
+	USE_BIBCPPDEV=1
+	USE_ARMADILLO=1
+	USE_BAMTOOLS=1
+	USE_R=1
+	USE_CURL=1
+	LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibseqDev/lib \
+			-L$(LOCAL_PATH)/bibseqDev/lib  \
+			-lbibseqDev
+endif
+
+
 #bibcpp
 ifeq ($(USE_BIBCPP),1)
 	COMLIBS += -isystem$(LOCAL_PATH)/bibcpp/include
@@ -61,6 +84,19 @@ ifeq ($(USE_BIBCPP),1)
 			-L$(LOCAL_PATH)/bibcpp/lib  \
 			-lbibcpp
 endif
+
+#bibcppDev
+ifeq ($(USE_BIBCPPDEV),1)
+	COMLIBS += -isystem$(LOCAL_PATH)/bibcppDev/include
+	USE_JSONCPP=1
+	USE_BOOST=1
+	#currently no compiled components so no need for library flags
+	#uncomment bellow in the future if there parts of the package need to be compiled
+	#LD_FLAGS += -Wl,-rpath,$(LOCAL_PATH)/bibcppDev/lib \
+			-L$(LOCAL_PATH)/bibcppDev/lib  \
+			-lbibcppDev
+endif
+
 
 
 #jsoncpp
@@ -97,9 +133,6 @@ ifeq ($(USE_ARMADILLO),1)
 			-L$(LOCAL_PATH)/armadillo/lib  \
 			-larmadillo
 endif
-
-
-
 
 
 #shark
@@ -173,7 +206,7 @@ ifeq ($(USE_R),1)
 endif
 
 ifeq ($(UNAME_S),Darwin)
-    #for dylib path fixing in macs, this gets rid of the name_size limit
+    #for dylib path fixing in macs, this gets rid of the name_size limit, which why the hell is there a name size limit
     LD_FLAGS += -headerpad_max_install_names
 endif
 

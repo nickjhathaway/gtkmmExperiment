@@ -1,0 +1,7 @@
+#mac
+brew install gtkmm3
+brew install gnome-icon-theme
+
+#ubuntu
+sudo apt-get install libgtkmm-3.0-dev
+

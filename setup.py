@@ -625,7 +625,7 @@ make COMPFILE=compfile.mk -j {num_cores}
 
     def bamtools(self):
         i = self.__path('bamtools')
-        cmd = """mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. 
+        cmd = """git checkout v2.4.0 && mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. 
         && make -j {num_cores} install""".format(
             local_dir=shellquote(i.local_dir), num_cores=self.num_cores(), CC=self.CC, CXX=self.CXX)
         cmd = " ".join(cmd.split())
@@ -633,7 +633,11 @@ make COMPFILE=compfile.mk -j {num_cores}
 
     def bibcpp(self):
         i = self.__path('bibcpp')
+        branch = "release/2"
+        version = "2"
         self.__buildNjhProject(i)
+        #self.__buildNjhProjectTag(i, version)
+        #self.__buildNjhProjectBranch(i, branch)
     
     def bibcppDev(self):
         i = self.__path('bibcppdev')
@@ -641,7 +645,11 @@ make COMPFILE=compfile.mk -j {num_cores}
 
     def bibseq(self):
         i = self.__path('bibseq')
+        branch = "release/2"
+        version = "2"
         self.__buildNjhProject(i)
+        #self.__buildNjhProjectTag(i, version)
+        #self.__buildNjhProjectBranch(i, branch)
         
     def bibseqDev(self):
         i = self.__path('bibseqdev')
@@ -649,7 +657,12 @@ make COMPFILE=compfile.mk -j {num_cores}
         
     def SeekDeep(self):
         i = self.__path('seekdeep')
+        branch = "release/2"
+        version = "2"
         self.__buildNjhProject(i)
+        #self.__buildNjhProjectTag(i, version)
+        #self.__buildNjhProjectBranch(i, branch)
+    
     
     def SeekDeepDev(self):
         i = self.__path('seekdeepdev')

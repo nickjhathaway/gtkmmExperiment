@@ -762,7 +762,11 @@ make COMPFILE=compfile.mk -j {num_cores}
         
     def njhRInside(self):
         i = self.__path('njhrinside')
-        self.__buildBibProject(i)
+        branch = "develop"
+        version = "2"
+        #self.__buildBibProject(i)
+        #self.__buildBibProjectTag(i, version)
+        self.__buildBibProjectBranch(i, branch)
     
     def jsoncpp(self):
         i = self.__path('jsoncpp')
@@ -885,7 +889,9 @@ cp -a * {local_dir}/
         self.__build(i, cmd)
 
     def cppprogutils(self):
-        self.__git(self.__path('cppprogutils'))
+        branch = "develop"
+        version = "2"
+        self.__gitTag(self.__path('cppprogutils'), branch)
 
     def catch(self):
         self.__git(self.__path('catch'))

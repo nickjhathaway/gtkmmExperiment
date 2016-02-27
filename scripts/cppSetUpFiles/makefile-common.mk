@@ -1,7 +1,7 @@
 UNAME_S := $(shell uname -s)
 LOCAL_PATH = $(EXT_PATH)/local
 #LD_FLAGS += 
-#defaults for most progjects
+#defaults for most projects
 COMLIBS += -I./src/
 
 #dlib

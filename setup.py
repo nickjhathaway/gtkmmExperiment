@@ -258,6 +258,7 @@ class Packages():
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "master")
         pack.addHeaderOnlyVersion(url, "master")
+        pack.versions_["master"].includePath_ = os.path.join(name, "master", name)
         if not Utils.isMac():
             pack.versions_["master"].additionalLdFlags_ = ["-lrt"]
         return pack
@@ -544,7 +545,7 @@ class Packages():
         name = "njhRInside"
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "1.1.1")
-        pack.addVersion(url, "develop",[LibNameVer("r", "3.2.2"),LibNameVer("cppitertools", "v0.1")])
+        pack.addVersion(url, "develop",[LibNameVer("r", "3.2.4"),LibNameVer("cppitertools", "v0.1")])
         pack.addVersion(url, "1.1.1", [LibNameVer("r", "3.2.2"),LibNameVer("cppitertools", "v0.1")])
         return pack
     
@@ -1102,7 +1103,8 @@ class Setup:
                 raise Exception("Need to give version for " + lib)
             else:
                 libSplit = lib.split(":")
-                self.packages_.addPackage(self.setUpsNeeded,LibNameVer(libSplit[0].lower(),libSplit[1]))
+                #self.packages_.addPackage(self.setUpsNeeded,LibNameVer(libSplit[0].lower(),libSplit[1]))
+                self.setUpsNeeded.append(LibNameVer(libSplit[0].lower(),libSplit[1]))
         for set in self.setUpsNeeded:
             self.packages_.checkForPackVer(set)
             pack = self.__package(set.name)
